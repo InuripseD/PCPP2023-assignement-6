@@ -62,6 +62,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 		this.maxWorkers = maxWorkers;
 		this.pendingTasks = new ArrayList<>();
 		this.busyWorkers = new HashSet<>();
+		this.idleWorkers = new ArrayList<>();
 		for(int i = 0; i < minWorkers; i++) {
 			ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+workersNumbers); 
 			getContext().watch(worker); //12.4
