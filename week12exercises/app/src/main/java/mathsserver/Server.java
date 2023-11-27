@@ -11,6 +11,8 @@ import akka.actor.typed.javadsl.*;
 
 import java.util.Queue;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.stream.IntStream;
 
@@ -41,9 +43,11 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
     }
     
     /* --- State ---------------------------------------- */
-	ArrayList<Task> pendingTasks = new ArrayList<Task>();
-	ArrayList<Worker> idleWorkers = new ArrayList<Worker>();
-	HashSet<Worker> busyWorkers = new HashSet<Worker>();
+	private ArrayList<Task> pendingTasks;
+	private ArrayList<ActorRef<Worker.WorkerCommand>> idleWorkers;
+	private HashSet<ActorRef<Worker.WorkerCommand>> busyWorkers;
+	private int minWorkers;
+	private int maxWorkers;
     
 
     /* --- Constructor ---------------------------------- */
@@ -51,6 +55,16 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 				   int minWorkers, int maxWorkers) {
     	super(context);
 		// To be implemented
+		this.minWorkers = minWorkers;
+		this.maxWorkers = maxWorkers;
+		this.pendingTasks = new ArrayList<>();
+		this.busyWorkers = new HashSet<>();
+		for(int i = 0; i < minWorkers; i++) {
+			ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+i); 
+			idleWorkers.add(worker);
+		}
+		
+
 	
     }
 
@@ -74,7 +88,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 
     /* --- Handlers ------------------------------------- */
     public Behavior<ServerCommand> onComputeTasks(ComputeTasks msg) {
-		if pendingTasks.isEmpty()
+		//if pendingTasks.isEmpty()
     	return this;
     }
 
