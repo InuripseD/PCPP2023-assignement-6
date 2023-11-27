@@ -44,7 +44,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
     }
     
     /* --- State ---------------------------------------- */
-	private ArrayList<Task> pendingTasks;
+	private ArrayList<Worker.ComputeTask> pendingTasks;
 	private ArrayList<ActorRef<Worker.WorkerCommand>> idleWorkers;
 	private HashSet<ActorRef<Worker.WorkerCommand>> busyWorkers;
 	private int minWorkers;
@@ -104,7 +104,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 					worker.tell(new Worker.ComputeTask(task, msg.client));
 					busyWorkers.add(worker);
 				}else{
-					pendingTasks.add(task);
+					pendingTasks.add(new Worker.ComputeTask(task, msg.client));
 				}
 			}else{
 				ActorRef<Worker.WorkerCommand> worker = idleWorkers.get(0);
@@ -116,7 +116,13 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
     }
 
     public Behavior<ServerCommand> onWorkDone(WorkDone msg) {
-		// To be implemented
+		if (!pendingTasks.isEmpty()){
+			msg.worker.tell(pendingTasks.get(0))
+		} else {
+			var ref = msg.getRef();
+			busyWorkers.remove(ref);
+			idleWorkers.add(ref);
+		}
 		return this;	
     }   
 	
