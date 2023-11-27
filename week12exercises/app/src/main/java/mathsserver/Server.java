@@ -41,8 +41,9 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
     }
     
     /* --- State ---------------------------------------- */
-    // To be implemented
-    
+	ArrayList<Task> pendingTasks = new ArrayList<Task>();
+	ArrayList<Worker> idleWorkers = new ArrayList<Worker>();
+	HashSet<Worker> busyWorkers = new HashSet<Worker>();
     
 
     /* --- Constructor ---------------------------------- */
@@ -73,7 +74,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 
     /* --- Handlers ------------------------------------- */
     public Behavior<ServerCommand> onComputeTasks(ComputeTasks msg) {
-		// To be implemented
+		if pendingTasks.isEmpty()
     	return this;
     }
 
