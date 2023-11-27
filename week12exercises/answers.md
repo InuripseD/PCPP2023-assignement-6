@@ -13,3 +13,10 @@ We added two private fields:
 this is all that is needed for new state.
 In the constructor we use a for-loop to spawn `minWorkers`
 new workers and add them to the list of idle workers. We also initialize the other state: `busyWorkers` and `pendingTasks`.
+
+## 12.3
+Implementation in `Server.java`.
+If there are idle workers the task is sent to a worker—using a ComputeTask message.
+If there are no idle workers, but the number of busy workers is less than maxWorkers, then spawn a
+new worker and send the task.
+If none of the above conditions hold, then the task must be placed in the list of pending tasks.

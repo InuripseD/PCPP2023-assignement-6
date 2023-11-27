@@ -48,6 +48,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 	private HashSet<ActorRef<Worker.WorkerCommand>> busyWorkers;
 	private int minWorkers;
 	private int maxWorkers;
+	private static int workersNumbers;
     
 
     /* --- Constructor ---------------------------------- */
@@ -55,13 +56,15 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 				   int minWorkers, int maxWorkers) {
     	super(context);
 		// To be implemented
+		workersNumbers = 0;
 		this.minWorkers = minWorkers;
 		this.maxWorkers = maxWorkers;
 		this.pendingTasks = new ArrayList<>();
 		this.busyWorkers = new HashSet<>();
 		for(int i = 0; i < minWorkers; i++) {
-			ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+i); 
+			ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+workersNumbers); 
 			idleWorkers.add(worker);
+			workersNumbers++;
 		}
 		
 
@@ -88,7 +91,22 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 
     /* --- Handlers ------------------------------------- */
     public Behavior<ServerCommand> onComputeTasks(ComputeTasks msg) {
-		//if pendingTasks.isEmpty()
+		for(Task task: msg.tasks){
+			if (idleWorkers.isEmpty()) {
+				if (busyWorkers.size() < maxWorkers) {
+					ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+workersNumbers); 
+					workersNumbers++;
+					worker.tell(new Worker.ComputeTask(task, msg.client));
+					busyWorkers.add(worker);
+				}else{
+					pendingTasks.add(task);
+				}
+			}else{
+				ActorRef<Worker.WorkerCommand> worker = idleWorkers.get(0);
+				worker.tell(new Worker.ComputeTask(task, msg.client));
+				busyWorkers.add(worker);
+			}
+		}
     	return this;
     }
 
