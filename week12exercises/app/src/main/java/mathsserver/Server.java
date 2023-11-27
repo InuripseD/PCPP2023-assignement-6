@@ -117,9 +117,9 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 
     public Behavior<ServerCommand> onWorkDone(WorkDone msg) {
 		if (!pendingTasks.isEmpty()){
-			msg.worker.tell(pendingTasks.get(0))
+			msg.worker.tell(pendingTasks.get(0));
 		} else {
-			var ref = msg.getRef();
+			var ref = msg.worker;
 			busyWorkers.remove(ref);
 			idleWorkers.add(ref);
 		}
