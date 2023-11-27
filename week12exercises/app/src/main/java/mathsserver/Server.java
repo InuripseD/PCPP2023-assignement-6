@@ -22,6 +22,7 @@ import mathsserver.Task.BinaryOperation;
 public class Server extends AbstractBehavior<Server.ServerCommand> {
     /* --- Messages ------------------------------------- */
     public interface ServerCommand { }
+
     
     public static final class ComputeTasks implements ServerCommand {
 		public final List<Task> tasks;
@@ -63,6 +64,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 		this.busyWorkers = new HashSet<>();
 		for(int i = 0; i < minWorkers; i++) {
 			ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+workersNumbers); 
+			getContext().watch(worker); //12.4
 			idleWorkers.add(worker);
 			workersNumbers++;
 		}
@@ -84,6 +86,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
     	return newReceiveBuilder()
     	    .onMessage(ComputeTasks.class, this::onComputeTasks)
     	    .onMessage(WorkDone.class, this::onWorkDone)
+			.onSignal(ChildFailed.class, this::onChildFailed)
 			// To be extended
     	    .build();
     }
@@ -95,6 +98,7 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
 			if (idleWorkers.isEmpty()) {
 				if (busyWorkers.size() < maxWorkers) {
 					ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+workersNumbers); 
+					getContext().watch(worker); // 12.4
 					workersNumbers++;
 					worker.tell(new Worker.ComputeTask(task, msg.client));
 					busyWorkers.add(worker);
@@ -113,5 +117,19 @@ public class Server extends AbstractBehavior<Server.ServerCommand> {
     public Behavior<ServerCommand> onWorkDone(WorkDone msg) {
 		// To be implemented
 		return this;	
-    }    
+    }   
+	
+	public Behavior<ServerCommand> onChildFailed(ChildFailed childFailed) {
+		// get the worker and remove it from busyworkers
+		var ref = childFailed.getRef();
+		busyWorkers.remove(ref);
+
+		// spawn a new worker and add to idle
+		ActorRef<Worker.WorkerCommand> worker = getContext().spawn(Worker.create(this.getContext().getSelf()), "Worker"+workersNumbers); 
+		workersNumbers++;
+		idleWorkers.add(worker);
+
+
+		return this;
+	}
 }

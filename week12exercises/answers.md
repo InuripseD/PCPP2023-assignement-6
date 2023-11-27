@@ -20,3 +20,8 @@ If there are idle workers the task is sent to a worker—using a ComputeTask mes
 If there are no idle workers, but the number of busy workers is less than maxWorkers, then spawn a
 new worker and send the task.
 If none of the above conditions hold, then the task must be placed in the list of pending tasks.
+
+
+## 12.4
+We added a signal-handler to the Server actor which handles `OnChildFailed` and in the actual handler method 
+we get the reference to the failed worker, remove it from the set of busy workers, spawn a new and add that to the list of idle workers.
